@@ -15,7 +15,7 @@ class Student(models.Model):
                                  help_text='First Name')
 
     attendanceClassroom = models.ForeignKey(
-        'Classroom', on_delete=models.SET_NULL, null=True)
+        'Classroom', on_delete=models.DO_NOTHING, blank = True, null=True)
 
     class Meta:
         ordering = ['studentId']
@@ -78,7 +78,7 @@ class Beacon(models.Model):
 class Classroom(models.Model):
     classroomId = models.CharField(max_length=20)
     currentTeacher = models.ForeignKey(
-        'Teacher', on_delete=models.SET_NULL, null=True)
+        'Teacher', on_delete=models.SET_NULL, blank = True, null=True)
 
     def __str__(self):
         """String for representing the Model object."""
