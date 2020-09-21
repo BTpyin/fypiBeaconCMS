@@ -9,19 +9,31 @@ from . import views
 
 
 
-
-
-
+student_detail = views.StudentViewSet.as_view({
+    'get': 'retrieve',
+    'put': 'update',
+    'patch': 'partial_update',
+    'delete': 'destroy'
+})
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r'students', views.StudentViewSet)
+router.register(r'students', views.StudentViewSet,basename='students')
 router.register(r'classroom', views.ClassroomViewSet)
+router.register(r'beacon', views.BeaconViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    url(r'^checkSidValid/',views.CheckSidValid, name='checkSidVaild')
+    url(r'^checkSidValid/',views.CheckSidValid, name='checkSidVaild'),
+    path('getStudentInfo/<int:sid>/', views.GetStudentInfo, name='getStudentInfo'),
+    path('updateDisplayName/<int:sid>',views.UpdateDisplayName,name="updateDisplayName"),
+    path('getBeaconRepresent/<str:id>',views.GetBeaconRepresent,name="getBeaconRepresent"),
+    path('getClassroomInfo/<str:classroomId>',views.GetClassroomInfo,name="getClasseoomInfo"),
+    path('takeAttendance/<str:classroomId>',views.TakeAttendance,name="takeAttendance"),
+    path('updateClassroomTeacher/',views.UpdateClassroomTeacher),
+    path('refreshAttendanceList/<str:course_code>',views.RefreshAttendanceList),
+    path('getCourseDetail/<str:courseId>',views.GetCourseDetail)
     # path('studentsView/', views.StudentViewSet.as_view()),
     # path('students/<int:pk>/', views.StudentViewSet.as_view()),
     # path('classroom/',views.ClassroomViewSet.as_view()),
