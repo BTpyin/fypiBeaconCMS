@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render
 from catalog.models import Student, Classroom, Teacher, Beacon, StudentList, Class,Course
 from rest_framework import serializers, viewsets,permissions, status
-from .serializers import StudentSerializer,ClassroomSerializer, BeaconSerializer,CourseSerializer
+from .serializers import StudentSerializer,ClassroomSerializer, BeaconSerializer,CourseSerializer, ClassSerializer
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,7 +43,7 @@ def CheckSidValid(request):
         return Response(res)
     except:
         res = {'message':"Bad request"}
-        return Response(status.HTTP_400_BAD_REQUEST,status=status.HTTP_400_BAD_REQUEST)
+        return Response(res,status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
@@ -64,7 +64,7 @@ def UpdateDisplayName(request,sid):
         student = Student.objects.get(studentId=sid)
     except student.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
-    if request.method == 'PUT':
+    if request.method == 'PUT' or request.method == 'POST':
         serializer = StudentSerializer(student,data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -135,5 +135,26 @@ def GetCourseDetail(request,courseId):
         course = Course.objects.get(course_code=courseId)
     except course.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    classes = course.class_set.all()
+    classes_json_list = [ClassSerializer(c).data for c in classes]
     serializer = CourseSerializer(course)
-    return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+    data = serializer.data
+    pop_course = [c.pop('course') for c in classes_json_list]
+    data.update({'class':classes_json_list})
+    print(dir(data))
+    details = serializer.data.update({'class':classes_json_list})
+    return Response(data,status=status.HTTP_202_ACCEPTED)
+
+result = {
+    "message" : "Bad request"
+} 
+
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny,))
+def GetClassInfo(request):
+    try:
+        _class = Class.objects.get(classId=request.GET['classId'])
+        serializer = ClassSerializer(_class) 
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except:
+        return Response(result,status=status.HTTP_400_BAD_REQUEST)

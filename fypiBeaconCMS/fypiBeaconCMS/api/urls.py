@@ -32,8 +32,9 @@ urlpatterns = [
     path('getClassroomInfo/<str:classroomId>',views.GetClassroomInfo,name="getClasseoomInfo"),
     path('takeAttendance/<str:classroomId>',views.TakeAttendance,name="takeAttendance"),
     path('updateClassroomTeacher/',views.UpdateClassroomTeacher),
-    path('refreshAttendanceList/<str:course_code>',views.RefreshAttendanceList),
-    path('getCourseDetail/<str:courseId>',views.GetCourseDetail)
+    path('refreshAttendanceList/',views.RefreshAttendanceList),
+    path('getCourseDetail/<str:courseId>',views.GetCourseDetail),
+    path('getClassInfo/',views.GetClassInfo)
     # path('studentsView/', views.StudentViewSet.as_view()),
     # path('students/<int:pk>/', views.StudentViewSet.as_view()),
     # path('classroom/',views.ClassroomViewSet.as_view()),
