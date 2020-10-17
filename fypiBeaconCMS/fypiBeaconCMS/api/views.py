@@ -12,6 +12,13 @@ import json
 from django.http.response import HttpResponse
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import redirect
+import requests
+
+result = {
+    "Success" : False,
+    "Remarks" : "",
+    "Value" : None
+}
 
 # ViewSets define the view behavior.
 class StudentViewSet(viewsets.ModelViewSet):
@@ -32,23 +39,34 @@ class BeaconViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def CheckSidValid(request):
-    res = {
-            "valid" : False
-    }    
+    res = result    
     try:
         qs = Student.objects.filter(studentId=request.GET['sid'])
-        if qs is None or qs.count() <= 0:                        
+        if qs is None or qs.count() <= 0:                      
+            data = {"Valid":True}
+            res.update({"Success":True,"Value":data})
             return Response(res)
-        res['valid'] = True
-        return Response(res)
+        data = {"Valid":False}
+        res.update({"Success":True,"Value":data,"Remarks":"Already Used"})
+        return Response(res,status=status.HTTP_302_FOUND)
     except:
-        res = {'message':"Bad request"}
         return Response(res,status=status.HTTP_400_BAD_REQUEST)
     
+    
+def get_student_detail(sid):
+    return redirect(reverse('api:students-detail',args=[sid]))
+
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def GetStudentInfo(request, sid):
-    return redirect(reverse('api:students-detail',args=[sid]))
+    # return redirect(reverse('api:students-detail',args=[sid]))
+    res = result
+    link = request.get_raw_uri()
+    api = link[:str(link).find("api/")]
+    re = requests.get(api+"api/students/"+str(sid))    
+    data = re.json()
+    res.update({"Success":True,"Value":data})    
+    return Response(res)
 
 @api_view(['POST','PUT'])
 @permission_classes((permissions.AllowAny,))
@@ -60,6 +78,7 @@ def UpdateDisplayName(request,sid):
     "display_name": "Stanley"
     }
     """
+    res = result
     try:
         student = Student.objects.get(studentId=sid)
     except student.DoesNotExist:
@@ -68,93 +87,109 @@ def UpdateDisplayName(request,sid):
         serializer = StudentSerializer(student,data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            res.update({"Success":True,"Value":serializer.data})
+            return Response(res, status=status.HTTP_201_CREATED)
+        return Response(res.update({"Success":False,"Remark":serializer.errors,"Value":None}), status=status.HTTP_400_BAD_REQUEST)
     return Response(status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def GetBeaconRepresent(request,id):
+    res =result
     try:
         beacon = Beacon.objects.get(id=id)
     except beacon.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(res,status=status.HTTP_404_NOT_FOUND)
     classroom = beacon.classroomId
     serializer = ClassroomSerializer(classroom)
-    return Response({"classroomId":classroom.classroomId},status=status.HTTP_202_ACCEPTED)
+    res.update({"Value":{"classroomId":classroom.classroomId}})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def GetClassroomInfo(request,classroomId):
+    res = result
     try:
         classroom = Classroom.objects.get(classroomId=classroomId)
     except classroom.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)    
+        return Response(res,status=status.HTTP_404_NOT_FOUND)    
     serializer = ClassroomSerializer(classroom)
-    return Response(serializer.data,status=status.HTTP_202_ACCEPTED)
+    res.update({"Success":True,"Value":serializer.data})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['POST'])
 @permission_classes((permissions.AllowAny,))
 def TakeAttendance(request,classroomId):    
+    res = result
     try:
         student = Student.objects.get(studentId=request.data['sid'])
-    except student.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+    except KeyError as e:
+        res.update({"Remarks":"please check the post data"})
+        return Response(res,status=status.HTTP_400_BAD_REQUEST)
+    except Student.DoesNotExist:
+        res.update({"Remarks":"Studnet does not exist"})
+        return Response(res,status=status.HTTP_404_NOT_FOUND)
     try:
         classroom=Classroom.objects.get(classroomId=classroomId)
-    except classroom.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)    
+    except Classroom.DoesNotExist:
+        res.update({"Remarks":"Classroom does not exist"})
+        return Response(res,status=status.HTTP_404_NOT_FOUND)    
     students,created = StudentList.objects.get_or_create(classroom=classroom)
     students.studentList.add(student)
-    return Response({'message':'success'},status=status.HTTP_202_ACCEPTED)
+    res.update({"Success":True,"Value":{'message':'success'}})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
     
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def UpdateClassroomTeacher(request):
+    res = result
     classroomId = request.data["classroomId"]
     classId = request.data['classId']
     classroom = Classroom.objects.get(classroomId=classroomId)
     _class= Class.objects.get(classId=classId)
     classroom.currentTeacher = _class.teacher
     classroom.save()
-    return Response({'message':"updated"},status=status.HTTP_202_ACCEPTED)
+    res.update({"Success":True,"Value":{'message':"updated"}})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def RefreshAttendanceList(request):
+    res = result
     classroomId = request.data['classroomId']
     classroom = Classroom.objects.get(classroomId=classroomId)
     classroom.currentTeacher=None
     classroom.save()
-    return Response({'message':"cleared"},status=status.HTTP_202_ACCEPTED)
+    res.update({"Success":True,"Value":{'message':"cleared"}})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def GetCourseDetail(request,courseId):
+    res = result
     try:
         course = Course.objects.get(course_code=courseId)
     except course.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        res.update({"Remarks":"Course does not exist"})
+        return Response(res,status=status.HTTP_404_NOT_FOUND)
     classes = course.class_set.all()
     classes_json_list = [ClassSerializer(c).data for c in classes]
     serializer = CourseSerializer(course)
     data = serializer.data
     pop_course = [c.pop('course') for c in classes_json_list]
     data.update({'class':classes_json_list})
-    print(dir(data))
     details = serializer.data.update({'class':classes_json_list})
-    return Response(data,status=status.HTTP_202_ACCEPTED)
-
-result = {
-    "message" : "Bad request"
-} 
+    res.update({"Success":True,"Value":data})
+    return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def GetClassInfo(request):
+    res = result
     try:
         _class = Class.objects.get(classId=request.GET['classId'])
         serializer = ClassSerializer(_class) 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        res.update({"Success":True,"Value":serializer.data})
+        return Response(res, status=status.HTTP_200_OK)
     except:
-        return Response(result,status=status.HTTP_400_BAD_REQUEST)
+        return Response(res,status=status.HTTP_400_BAD_REQUEST)
