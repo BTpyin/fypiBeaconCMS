@@ -94,15 +94,21 @@ def UpdateDisplayName(request,sid):
 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
-def GetBeaconRepresent(request,id):
+def GetBeaconRepresent(request):
     res =result
     try:
-        beacon = Beacon.objects.get(id=id)
-    except beacon.DoesNotExist:
+        # beacon = Beacon.objects.get(id=id)
+        beacons = Beacon.objects.all()
+    except Beacon.DoesNotExist:
         return Response(res,status=status.HTTP_404_NOT_FOUND)
-    classroom = beacon.classroomId
-    serializer = ClassroomSerializer(classroom)
-    res.update({"Value":{"classroomId":classroom.classroomId}})
+    res.update({"Success":True})
+    beacon_list = []
+    for i,beacon in enumerate(beacons):
+        classroom = beacon.classroomId
+        serializer = ClassroomSerializer(classroom)
+        beacon_list.append({i:{"Beacon":str(beacon.id),"Classroom":{"classroomId":classroom.classroomId}}})
+    data ={"Beacons":beacon_list}
+    res.update({"Value":data})
     return Response(res,status=status.HTTP_202_ACCEPTED)
 
 @api_view(['GET'])

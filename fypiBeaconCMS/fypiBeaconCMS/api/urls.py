@@ -28,7 +28,7 @@ urlpatterns = [
     url(r'^checkSidValid/',views.CheckSidValid, name='checkSidVaild'),
     path('getStudentInfo/<int:sid>/', views.GetStudentInfo, name='getStudentInfo'),
     path('updateDisplayName/<int:sid>',views.UpdateDisplayName,name="updateDisplayName"),
-    path('getBeaconRepresent/<str:id>',views.GetBeaconRepresent,name="getBeaconRepresent"),
+    path('getBeaconRepresent/',views.GetBeaconRepresent,name="getBeaconRepresent"),
     path('getClassroomInfo/<str:classroomId>',views.GetClassroomInfo,name="getClasseoomInfo"),
     path('takeAttendance/<str:classroomId>',views.TakeAttendance,name="takeAttendance"),
     path('updateClassroomTeacher/',views.UpdateClassroomTeacher),
