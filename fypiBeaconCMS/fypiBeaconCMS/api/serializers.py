@@ -24,23 +24,6 @@ class ClassroomSerializer(serializers.ModelSerializer):
         extra_kwargs={
             **set_required(model._meta.get_fields(),False),
         }
-        
-
-# Serializers define the API representation.
-class StudentSerializer(serializers.ModelSerializer):
-    attendanceClassroom = ClassroomSerializer(required=False)
-    
-    class Meta:
-        model = Student
-        requires_context=False
-        fields = '__all__'
-        extra_kwargs = {
-            **set_required(model._meta.get_fields(),False),
-            'attendanceClassroom':{'required':False},   
-            'taking_class' :{'required':False}                     
-            }
-            # 'url': {'view_name': 'student_detail', 'lookup_field': 'studentId'},
-            # 'attendanceClassroom': {'lookup_field': 'classroomId'}
 
 class BeaconSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,4 +40,21 @@ class ClassSerializer(serializers.ModelSerializer):
     class Meta:
         model = Class
         fields = '__all__'
+        
+# Serializers define the API representation.
+class StudentSerializer(serializers.ModelSerializer):
+    attendanceClassroom = ClassroomSerializer(required=False)
+    taking_class = ClassSerializer(required =False,many=True)
+    
+    class Meta:
+        model = Student
+        requires_context=False
+        fields = '__all__'
+        extra_kwargs = {
+            **set_required(model._meta.get_fields(),False),
+            'attendanceClassroom':{'required':False},   
+            'taking_class' :{'required':False}                     
+            }
+            # 'url': {'view_name': 'student_detail', 'lookup_field': 'studentId'},
+            # 'attendanceClassroom': {'lookup_field': 'classroomId'}
         
