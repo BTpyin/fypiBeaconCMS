@@ -106,7 +106,7 @@ def GetBeaconRepresent(request):
     for i,beacon in enumerate(beacons):
         classroom = beacon.classroomId
         serializer = ClassroomSerializer(classroom)
-        beacon_list.append({i:{"Beacon":str(beacon.id),"Classroom":{"classroomId":classroom.classroomId}}})
+        beacon_list.append({"uuid":str(beacon.id),"major":str(beacon.major),"minor":str(beacon.minor),"classroomId":classroom.classroomId})
     data ={"Beacons":beacon_list}
     res.update({"Value":data})
     return Response(res,status=status.HTTP_202_ACCEPTED)
