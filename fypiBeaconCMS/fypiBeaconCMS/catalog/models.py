@@ -31,6 +31,8 @@ class Student(models.Model):
 
     attendanceClassroom = models.ForeignKey(
         'Classroom', on_delete=models.DO_NOTHING, blank = True, null=True)
+    
+    taking_class = models.ManyToManyField('Class',null=True)
 
     class Meta:
         ordering = ['studentId']

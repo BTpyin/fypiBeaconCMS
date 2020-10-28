@@ -36,7 +36,8 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             **set_required(model._meta.get_fields(),False),
-            'attendanceClassroom':{'required':False}                        
+            'attendanceClassroom':{'required':False},   
+            'taking_class' :{'required':False}                     
             }
             # 'url': {'view_name': 'student_detail', 'lookup_field': 'studentId'},
             # 'attendanceClassroom': {'lookup_field': 'classroomId'}
