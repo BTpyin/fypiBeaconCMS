@@ -70,8 +70,7 @@ class Teacher(models.Model):
     def __str__(self):
         """String for representing the Model object."""
         return (self.first_name + ' ' + self.last_name)
-
-
+    
 class StudentList(models.Model):
     classroom = models.ForeignKey(
         'Classroom', on_delete=models.SET_NULL, null=True)
@@ -157,3 +156,9 @@ class Class(models.Model):
     def save(self):
         self.classId = f'{self.course.course_code}{self.class_type}{self.code:02d}{self.session:02d}'
         super(Class,self).save()
+        
+class AttendRecord(models.Model):
+    sid = models.CharField(max_length=15,blank = False, editable=False)
+    record = models.CharField(max_length=511,blank = False, editable=False)
+    updated_at = models.DateTimeField(auto_now_add=True)
+    create_at = models.DateTimeField(auto_now_add=True)
